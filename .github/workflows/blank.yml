@@ -1,0 +1,25 @@
+name: PC Windows remota
+on: workflow_dispatch
+
+jobs:
+  pc:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+          hostname: pc-windows
+
+      - name: Habilitar escritorio remoto
+        shell: pwsh
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-LocalUser -Name runneradmin -Password (ConvertTo-SecureString "${{ secrets.RDP_PASSWORD }}" -AsPlainText -Force)
+
+      - name: Mostrar IP
+        run: tailscale ip -4
+
+      - name: Mantener encendida
+        run: Start-Sleep -Seconds 21000
